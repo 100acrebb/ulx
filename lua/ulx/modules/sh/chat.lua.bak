@@ -3,51 +3,6 @@ CATEGORY_NAME = "Chat"
 
 ------------------------------ Psay ------------------------------
 function ulx.psay( calling_ply, target_ply, message )
-
-
-	if (IsValid(calling_ply)) then
-		if calling_ply.ACS_LastChatTime == nil then
-			calling_ply.ACS_LastChatTime = 0
-		end
-		if calling_ply.ACS_RepeatChatCount == nil then
-			calling_ply.ACS_RepeatChatCount = 0
-		end
-		if calling_ply.ACS_ChatCount == nil then
-			calling_ply.ACS_ChatCount = 0
-		end
-		if calling_ply.ACS_LastMsg == nil then
-			calling_ply.ACS_LastMsg = ""
-		end
-		-- repeating text?
-		if message == calling_ply.ACS_LastMsg then
-			calling_ply.ACS_RepeatChatCount = calling_ply.ACS_RepeatChatCount + 1
-		else
-			calling_ply.ACS_RepeatChatCount = 1
-		end
-		-- but enough of a delay
-		if calling_ply.ACS_LastChatTime + 10 < CurTime() then
-			calling_ply.ACS_RepeatChatCount = 0
-			calling_ply.ACS_ChatCount = 0
-		end
-		if (calling_ply.ACS_ChatCount > 5) then
-			calling_ply:Kick("Autokicked : chat spam")
-		end
-		if (calling_ply.ACS_RepeatChatCount > 3) then
-			calling_ply:Kick("Autokicked : chat spam")
-		end
-		calling_ply.ACS_LastChatTime = CurTime()
-		calling_ply.ACS_LastMsg = message
-	end
-
-
-
-	if calling_ply.Nick then
-		game.ConsoleCommand("say AdminHide:PSAY "..calling_ply:Nick() .. ":" .. target_ply:Nick() .." - " .. message.."\n")
-	else
-		game.ConsoleCommand("say AdminHide:PSAY "..  target_ply:Nick() .." - " .. message.."\n")
-	end
-
-	
 	ulx.fancyLog( { target_ply, calling_ply }, "#P to #P: " .. message, calling_ply, target_ply )
 end
 local psay = ulx.command( CATEGORY_NAME, "ulx psay", ulx.psay, "!p", true )
@@ -64,45 +19,10 @@ function ulx.asay( calling_ply, message )
 	local format
 	local me = "/me "
 	if message:sub( 1, me:len() ) == me then
-		format = "(STAFF) *** #P #s"
+		format = "(ADMINS) *** #P #s"
 		message = message:sub( me:len() + 1 )
 	else
-		format = "#P to staff: #s"
-	end
-	
-	
-	if (IsValid(calling_ply)) then
-		if calling_ply.ACS_LastChatTime == nil then
-			calling_ply.ACS_LastChatTime = 0
-		end
-		if calling_ply.ACS_RepeatChatCount == nil then
-			calling_ply.ACS_RepeatChatCount = 0
-		end
-		if calling_ply.ACS_ChatCount == nil then
-			calling_ply.ACS_ChatCount = 0
-		end
-		if calling_ply.ACS_LastMsg == nil then
-			calling_ply.ACS_LastMsg = ""
-		end
-		-- repeating text?
-		if message == calling_ply.ACS_LastMsg then
-			calling_ply.ACS_RepeatChatCount = calling_ply.ACS_RepeatChatCount + 1
-		else
-			calling_ply.ACS_RepeatChatCount = 1
-		end
-		-- but enough of a delay
-		if calling_ply.ACS_LastChatTime + 10 < CurTime() then
-			calling_ply.ACS_RepeatChatCount = 0
-			calling_ply.ACS_ChatCount = 0
-		end
-		if (calling_ply.ACS_ChatCount > 5) then
-			calling_ply:Kick("Autokicked : chat spam")
-		end
-		if (calling_ply.ACS_RepeatChatCount > 3) then
-			calling_ply:Kick("Autokicked : chat spam")
-		end
-		calling_ply.ACS_LastChatTime = CurTime()
-		calling_ply.ACS_LastMsg = message
+		format = "#P to admins: #s"
 	end
 
 	local players = player.GetAll()
@@ -112,19 +32,13 @@ function ulx.asay( calling_ply, message )
 			table.remove( players, i )
 		end
 	end
-	
-	if calling_ply.Nick then
-		game.ConsoleCommand("say AdminHide:ASAY "..calling_ply:Nick().." - " .. message.."\n")
-	else
-		game.ConsoleCommand("say AdminHide:ASAY " .. message.."\n")
-	end
-	
+
 	ulx.fancyLog( players, format, calling_ply, message )
 end
 local asay = ulx.command( CATEGORY_NAME, "ulx asay", ulx.asay, "@", true, true )
 asay:addParam{ type=ULib.cmds.StringArg, hint="message", ULib.cmds.takeRestOfLine }
 asay:defaultAccess( ULib.ACCESS_ALL )
-asay:help( "Send a message to currently connected staff." )
+asay:help( "Send a message to currently connected admins." )
 
 ------------------------------ Tsay ------------------------------
 function ulx.tsay( calling_ply, message )
