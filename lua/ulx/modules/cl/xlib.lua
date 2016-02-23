@@ -11,6 +11,7 @@ function xlib.makecheckbox( t )
 	pnl:SetText( t.label or "" )
 	pnl:SizeToContents()
 	pnl:SetValue( t.value or 0 )
+	pnl:SetZPos( t.zpos or 0 )
 	if t.convar then pnl:SetConVar( t.convar ) end
 
 	if t.textcolor then
@@ -67,6 +68,7 @@ function xlib.makelabel( t )
 	local pnl = vgui.Create( "DLabel", t.parent )
 	pnl:SetPos( t.x, t.y )
 	pnl:SetText( t.label or "" )
+	pnl:SetZPos( t.zpos or 0 )
 	if not t.tooltipwidth then t.tooltipwidth = 250 end
 	if t.tooltip then
 		if t.tooltipwidth ~= 0 then
@@ -100,6 +102,7 @@ function xlib.makelistlayout( t )
 	pnl.scroll:SetSize( t.w, t.h )
 	pnl:SetSize( t.w, t.h )
 	pnl.scroll:AddItem( pnl )
+	pnl:SetZPos( t.zpos or 0 )
 
 	function pnl:PerformLayout()
 		self:SizeToChildren( false, true )
@@ -114,7 +117,9 @@ function xlib.makebutton( t )
 	pnl:SetPos( t.x, t.y )
 	pnl:SetText( t.label or "" )
 	pnl:SetDisabled( t.disabled )
+	pnl:SetZPos( t.zpos or 0 )
 	if t.icon then pnl:SetIcon( t.icon ) end
+	if t.font then pnl:SetFont( t.font ) end
 	if t.btype and t.btype == "close" then
 		pnl.Paint = function( panel, w, h ) derma.SkinHook( "Paint", "WindowCloseButton", panel, w, h ) end
 	end
@@ -176,9 +181,11 @@ function xlib.maketextbox( t )
 	pnl:SetWide( t.w )
 	pnl:SetTall( t.h or 20 )
 	pnl:SetEnterAllowed( true )
+	pnl:SetZPos( t.zpos or 0 )
 	if t.convar then pnl:SetConVar( t.convar ) end
 	if t.text then pnl:SetText( t.text ) end
 	if t.enableinput then pnl:SetEnabled( t.enableinput ) end
+	if t.multiline then pnl:SetMultiline( t.multiline ) end
 	pnl.selectAll = t.selectall
 	if not t.tooltipwidth then t.tooltipwidth = 250 end
 	if t.tooltip then
@@ -275,6 +282,7 @@ function xlib.makepanel( t )
 	local pnl = vgui.Create( "DPanel", t.parent )
 	pnl:SetPos( t.x, t.y )
 	pnl:SetSize( t.w, t.h )
+	pnl:SetZPos( t.zpos or 0 )
 	if t.skin then pnl:SetSkin( t.skin ) end
 	if t.visible ~= nil then pnl:SetVisible( t.visible ) end
 	return pnl
@@ -296,6 +304,7 @@ function xlib.makenumberwang( t )
 	pnl:SetMinMax( t.min or 0, t.max or 255 )
 	pnl:SizeToContents()
 	pnl:SetValue( t.value )
+	pnl:SetZPos( t.zpos or 0 )
 	if t.w then pnl:SetWide( t.w ) end
 	if t.h then pnl:SetTall( t.h ) end
 	return pnl
@@ -307,6 +316,7 @@ function xlib.makecombobox( t )
 	t.h = t.h or 20
 	pnl:SetPos( t.x, t.y )
 	pnl:SetSize( t.w, t.h )
+	pnl:SetZPos( t.zpos or 0 )
 
 	--Create a textbox to use in place of the button
 	if ( t.enableinput == true ) then
@@ -534,6 +544,7 @@ function xlib.makeslider( t )
 	pnl.TextArea:SetDrawBackground( true )
 	pnl.TextArea.selectAll = t.selectall
 	pnl.Label:SizeToContents()
+	pnl:SetZPos( t.zpos or 0 )
 
 	if t.textcolor then
 		pnl.Label:SetTextColor( t.textcolor )
@@ -741,6 +752,10 @@ function PANEL:Init()
 		self:MouseCapture( false )
 		self:GetParent():OnChange( self:GetParent():GetColor() )
 	end
+	self.ColorCube.Knob.OnMouseReleased = function( self, mcode )
+		self:GetParent():GetParent():OnChange( self:GetParent():GetParent():GetColor() )
+		return DLabel.OnMouseReleased( self, mousecode )
+	end
 
 	self.txtR = xlib.makenumberwang{ x=7, y=110, w=35, value=255, parent=self }
 	self.txtR.OnValueChanged = function( self, val )
@@ -763,6 +778,14 @@ function PANEL:Init()
 		local p = self:GetParent()
 		p:OnChange( p:GetColor() )
 		hook.Call( "OnTextEntryLoseFocus", nil, self )
+	end
+	self.txtR.Up.DoClick = function( button, mcode )
+		self.txtR:SetValue( tonumber( self.txtR:GetValue() ) + 1 )
+		self.txtR:GetParent():OnChange( self.txtR:GetParent():GetColor() )
+	end
+	self.txtR.Down.DoClick = function( button, mcode )
+		self.txtR:SetValue( tonumber( self.txtR:GetValue() ) - 1 )
+		self.txtR:GetParent():OnChange( self.txtR:GetParent():GetColor() )
 	end
 	function self.txtR.OnMouseReleased( self, mousecode )
 		if ( self.Dragging ) then
@@ -792,6 +815,14 @@ function PANEL:Init()
 		p:OnChange( p:GetColor() )
 		hook.Call( "OnTextEntryLoseFocus", nil, self )
 	end
+	self.txtG.Up.DoClick = function( button, mcode )
+		self.txtG:SetValue( tonumber( self.txtG:GetValue() ) + 1 )
+		self.txtG:GetParent():OnChange( self.txtG:GetParent():GetColor() )
+	end
+	self.txtG.Down.DoClick = function( button, mcode )
+		self.txtG:SetValue( tonumber( self.txtG:GetValue() ) - 1 )
+		self.txtG:GetParent():OnChange( self.txtG:GetParent():GetColor() )
+	end
 	function self.txtG.OnMouseReleased( self, mousecode )
 		if ( self.Dragging ) then
 			self:GetParent():OnChange( self:GetParent():GetColor() )
@@ -819,6 +850,14 @@ function PANEL:Init()
 		local p = self:GetParent()
 		p:OnChange( p:GetColor() )
 		hook.Call( "OnTextEntryLoseFocus", nil, self )
+	end
+	self.txtB.Up.DoClick = function( button, mcode )
+		self.txtB:SetValue( tonumber( self.txtB:GetValue() ) + 1 )
+		self.txtB:GetParent():OnChange( self.txtB:GetParent():GetColor() )
+	end
+	self.txtB.Down.DoClick = function( button, mcode )
+		self.txtB:SetValue( tonumber( self.txtB:GetValue() ) - 1 )
+		self.txtB:GetParent():OnChange( self.txtB:GetParent():GetColor() )
 	end
 	function self.txtB.OnMouseReleased( self, mousecode )
 		if ( self.Dragging ) then
@@ -855,6 +894,14 @@ function PANEL:AddAlphaBar()
 		local p = self:GetParent()
 		p:OnChange( p:GetColor() )
 		hook.Call( "OnTextEntryLoseFocus", nil, self )
+	end
+	self.txtA.Up.DoClick = function( button, mcode )
+		self.txtA:SetValue( tonumber( self.txtA:GetValue() ) + 1 )
+		self.txtA:GetParent():OnChange( self.txtA:GetParent():GetColor() )
+	end
+	self.txtA.Down.DoClick = function( button, mcode )
+		self.txtA:SetValue( tonumber( self.txtA:GetValue() ) - 1 )
+		self.txtA:GetParent():OnChange( self.txtA:GetParent():GetColor() )
 	end
 	function self.txtA.OnMouseReleased( self, mousecode )
 		if ( self.Dragging ) then
@@ -977,6 +1024,12 @@ end
 vgui.Register( "xlibColorPanel", PANEL, "DPanel" )
 
 
+-- Create font for Ban Message preview to match the font used in the actual banned/disconnect dialog.
+surface.CreateFont ("DefaultLarge", {
+	font = "Tahoma",
+	size = 16,
+	weight = 0,
+})
 
 -------------------------
 --Custom Animation System

@@ -10,6 +10,8 @@ function settings.init()
 	xgui.addDataType( "adverts", function() return ulx.adverts end, "xgui_svsettings", 0, -10 )
 	xgui.addDataType( "banreasons", function() return ulx.common_kick_reasons end, "ulx ban", 0, -10 )
 	xgui.addDataType( "votemaps", function() return settings.votemaps end, nil, 0, -20 )
+	xgui.addDataType( "motdsettings", function() return ulx.motdSettings end, nil, 0, -20 )
+	xgui.addDataType( "banmessage", function() return {message=ULib.BanMessage} end, nil, 0, 0 )
 
 	ULib.replicatedWritableCvar( "sv_voiceenable", "rep_sv_voiceenable", GetConVarNumber( "sv_voiceenable" ), false, false, "xgui_svsettings" )
 	ULib.replicatedWritableCvar( "sv_alltalk", "rep_sv_alltalk", GetConVarNumber( "sv_alltalk" ), false, false, "xgui_svsettings" )
@@ -233,9 +235,9 @@ function settings.init()
 					end
 				end
 			end
+			settings.saveVotemaps( GetConVar( "ulx_votemapMapmode" ):GetInt() )
+			xgui.sendDataTable( {}, "votemaps" )
 		end
-		settings.saveVotemaps( GetConVar( "ulx_votemapMapmode" ):GetInt() )
-		xgui.sendDataTable( {}, "votemaps" )
 	end
 	xgui.addCmd( "removeVotemaps", settings.removeVotemaps )
 
@@ -268,6 +270,80 @@ function settings.init()
 
 		ULib.fileWrite( "data/ulx/votemaps.txt", new_file )
 		settings.updatevotemaps()
+	end
+
+
+	util.AddNetworkString( "XGUI.PreviewBanMessage" )
+	net.Receive( "XGUI.PreviewBanMessage", function( len, ply )
+		if ULib.ucl.query( ply, "xgui_svsettings" ) then
+			-- Create fake ban info for testing
+			local banData = {
+				admin   = "Mr. Admin Man (STEAM_1:1:1111111)",
+				name    = "Bob Troll",
+				reason  = "Disobeying the rules",
+				steamID = "STEAM_1:1:1111111",
+				time    = os.time(),
+				unban   = os.time() + 1654654
+			}
+			local templateMessage = net.ReadString():Trim()
+
+			-- Generate preview and send to client
+			local message = ULib.getBanMessage( "STEAM_1:1:1111111", banData, templateMessage )
+			ULib.clientRPC( ply, "xgui.handleBanPreview", message )
+		end
+	end)
+
+	util.AddNetworkString( "XGUI.SaveBanMessage" )
+	net.Receive( "XGUI.SaveBanMessage", function( len, ply )
+		if ULib.ucl.query( ply, "xgui_svsettings" ) then
+			local orig_file = ULib.fileRead( "data/ulx/banmessage.txt" )
+			local comment = xgui.getCommentHeader( orig_file )
+			local new_file = comment
+
+			ULib.BanMessage = net.ReadString():Trim()
+			ULib.fileWrite( "data/ulx/banmessage.txt", new_file .. ULib.BanMessage )
+			xgui.sendDataTable( {}, "banmessage" )
+		end
+	end)
+
+
+	local function updateMOTDGeneratorData(setting, data)
+		local success, prev = ULib.setVar( setting, data, ulx.motdSettings )
+		if (success and prev ~= data) then
+			settings.saveMotdSettings()
+			ulx.populateMotdData()
+			ulx.motdUpdated()
+			xgui.sendDataTable( {}, "motdsettings" )
+		end
+	end
+
+	util.AddNetworkString( "XGUI.UpdateMotdData" )
+	net.Receive( "XGUI.UpdateMotdData", function( len, ply )
+		if ULib.ucl.query( ply, "ulx showmotd" ) then
+			local setting = net.ReadString()
+			local value = net.ReadString()
+			updateMOTDGeneratorData( setting, value )
+		end
+	end)
+
+	util.AddNetworkString( "XGUI.SetMotdData" )
+	net.Receive( "XGUI.SetMotdData", function( len, ply )
+		if ULib.ucl.query( ply, "ulx showmotd" ) then
+			local setting = net.ReadString()
+			local data = net.ReadTable()
+			updateMOTDGeneratorData( setting, data )
+		end
+	end)
+
+	function settings.saveMotdSettings()
+		local orig_file = ULib.fileRead( "data/ulx/motd.txt" )
+		local comment = xgui.getCommentHeader( orig_file )
+		local new_file = comment
+
+		local motdSave = { info=ulx.motdSettings.info, style=ulx.motdSettings.style }
+		new_file = new_file .. ULib.makeKeyValues( motdSave )
+
+		ULib.fileWrite( "data/ulx/motd.txt", new_file )
 	end
 end
 
