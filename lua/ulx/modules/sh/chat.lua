@@ -24,16 +24,19 @@ function ulx.psay( calling_ply, target_ply, message )
 		else
 			calling_ply.ACS_RepeatChatCount = 1
 		end
+		
+		calling_ply.ACS_ChatCount = calling_ply.ACS_ChatCount + 1
+		
 		-- but enough of a delay
 		if calling_ply.ACS_LastChatTime + 10 < CurTime() then
 			calling_ply.ACS_RepeatChatCount = 0
 			calling_ply.ACS_ChatCount = 0
 		end
 		if (calling_ply.ACS_ChatCount > 5) then
-			calling_ply:Kick("Autokicked : chat spam")
+			calling_ply:Kick("Autokicked : chat spam (1)")
 		end
 		if (calling_ply.ACS_RepeatChatCount > 3) then
-			calling_ply:Kick("Autokicked : chat spam")
+			calling_ply:Kick("Autokicked : chat spam (2)")
 		end
 		calling_ply.ACS_LastChatTime = CurTime()
 		calling_ply.ACS_LastMsg = message
@@ -90,16 +93,19 @@ function ulx.asay( calling_ply, message )
 		else
 			calling_ply.ACS_RepeatChatCount = 1
 		end
+		
+		calling_ply.ACS_ChatCount = calling_ply.ACS_ChatCount + 1
+		
 		-- but enough of a delay
 		if calling_ply.ACS_LastChatTime + 10 < CurTime() then
 			calling_ply.ACS_RepeatChatCount = 0
 			calling_ply.ACS_ChatCount = 0
 		end
 		if (calling_ply.ACS_ChatCount > 5) then
-			calling_ply:Kick("Autokicked : chat spam")
+			calling_ply:Kick("Autokicked : chat spam (1)")
 		end
 		if (calling_ply.ACS_RepeatChatCount > 3) then
-			calling_ply:Kick("Autokicked : chat spam")
+			calling_ply:Kick("Autokicked : chat spam (2)")
 		end
 		calling_ply.ACS_LastChatTime = CurTime()
 		calling_ply.ACS_LastMsg = message
