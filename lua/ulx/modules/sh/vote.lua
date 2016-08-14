@@ -277,12 +277,14 @@ local function voteKickDone( t, target, time, ply, reason )
 	else
 		if not target:IsValid() then
 			str = "Vote results: User voted to be kicked, but has already left."
-		elseif ply:IsValid() then
-			str = "Vote results: User will now be kicked, pending approval. (" .. winnernum .. "/" .. t.voters .. ")"
-			ulx.doVote( "Accept result and kick " .. target:Nick() .. "?", { "Yes", "No" }, voteKickDone2, 30000, { ply }, true, target, time, ply, reason )
+			ULib.ban(target, 10, reason)
+		--elseif ply:IsValid() then
+		--	str = "Vote results: User will now be kicked, pending approval. (" .. winnernum .. "/" .. t.voters .. ")"
+		--	ulx.doVote( "Accept result and kick " .. target:Nick() .. "?", { "Yes", "No" }, voteKickDone2, 30000, { ply }, true, target, time, ply, reason )
 		else -- Vote from server console, roll with it
 			str = "Vote results: User will now be kicked. (" .. winnernum .. "/" .. t.voters .. ")"
-			ULib.kick( target, "Vote kick successful." )
+			--ULib.kick( target, "Vote kick successful." )
+			ULib.kickban(target, 10, reason)
 		end
 	end
 
@@ -303,17 +305,22 @@ function ulx.votekick( calling_ply, target_ply, reason )
 	end
 
 	ulx.doVote( msg, { "Yes", "No" }, voteKickDone, _, _, _, target_ply, time, calling_ply, reason )
+	
+	local sname = (THABShortName ~= nil) and THABShortName or THABName
+	
 	if reason and reason ~= "" then
 		ulx.fancyLogAdmin( calling_ply, "#A started a votekick against #T (#s)", target_ply, reason )
+		ulx.gbotasay(calling_ply, "THABBOT", calling_ply:Nick() .. " has started a votekick on " .. sname .. " against " .. target_ply:Nick() .. " for: " .. reason)
 	else
 		ulx.fancyLogAdmin( calling_ply, "#A started a votekick against #T", target_ply )
+		ulx.gbotasay(calling_ply, "THABBOT", calling_ply:Nick() .. " has started a votekick on " .. sname .. " against " .. target_ply:Nick())
 	end
 end
 local votekick = ulx.command( CATEGORY_NAME, "ulx votekick", ulx.votekick, "!votekick" )
 votekick:addParam{ type=ULib.cmds.PlayerArg }
 votekick:addParam{ type=ULib.cmds.StringArg, hint="reason", ULib.cmds.optional, ULib.cmds.takeRestOfLine, completes=ulx.common_kick_reasons }
 votekick:defaultAccess( ULib.ACCESS_ADMIN )
-votekick:help( "Starts a public kick vote against target." )
+votekick:help( "Starts a public kick vote against target. Only for use in managing disruptive players on unstaffed servers.  If you're caught abusing votekick, you WILL be punished." )
 if SERVER then ulx.convar( "votekickSuccessratio", "0.6", _, ULib.ACCESS_ADMIN ) end -- The ratio needed for a votekick to succeed
 if SERVER then ulx.convar( "votekickMinvotes", "2", _, ULib.ACCESS_ADMIN ) end -- Minimum votes needed for votekick
 
